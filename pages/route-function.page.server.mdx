@@ -1,0 +1,271 @@
+Route Functions give us full programmatic flexibility to define our routing logic.
+
+```js
+// /pages/film/admin.page.route.js
+
+import partRegex from 'part-regex'
+
+export default pageContext => {
+  // Route Functions allow us to implement advanced routing such as route guards.
+  if (! pageContext.user.isAdmin) {
+    return false
+  }
+  const { url } = pageContext
+  // We can use RegExp or any JavaScript tool/library we want.
+  if (!partRegex`/film/${/[0-9]+/}/admin`.test(url)) {
+    return false
+  }
+  filmId = url.split('/')[2]
+  return {
+    // We make `filmId` available as `pageContext.routeParams.filmId`
+    routeParams: { filmId },
+    // To resolve route conflicts, see "Precedence" section below.
+    precedence: 10,
+  }
+}
+```
+
+Route Functions enable us to use any matching utility we want, such as [partRegex](https://github.com/brillout/part-regex).
+
+
+## Always Run
+
+Upon each page request (i.e. upon each [`renderPage()`](/createPageRenderer) call),
+`vite-plugin-ssr` runs *all* our Route Functions.
+
+That's because we may have defined a Route Function with high precedence that overrides all other routes:
+
+```js
+// login.page.route.js
+
+export default pageContext => {
+  const userIsAuthenticated =  pageContext.user !== null
+  if (userIsAuthenticated) {
+    return false
+  }
+  // If the user is not authenticated, then we render the login page.
+  return {
+    // We override all other routes by setting a high `precedence` value of `99`.
+    precedence: 99
+  }
+}
+```
+
+> This authentication redirection trick is further explained at [Guides > Page Redirection > Auth Redirection](/page-redirection#auth-redirection).
+
+> `vite-plugin-ssr` cannot know whether a Route Function with a high precedence will override all other routes; that's why `vite-plugin-ssr` always runs all Route Functions upon each page request.
+
+
+## Async
+
+Async route functions may significantly slow down our app: as we have seen in the previous section, every time a page is rendered the Route Functions of all our pages are called and awaited for.
+
+This means that a slow Route Function will slow down all our pages.
+
+By default, async route functions are forbidden, but we can enable them by setting `iKnowThePerformanceRisksOfAsyncRouteFunctions`.
+
+```js
+// *.page.route.js
+
+export const iKnowThePerformanceRisksOfAsyncRouteFunctions = true
+
+// We can now use an async Route Function
+export default async () => { /* ... */ }
+```
+
+Also, providing `pageContext` in route functions if forbidden (even for async route functions).
+
+```js
+// *.page.route.js
+
+export const iKnowThePerformanceRisksOfAsyncRouteFunctions = true
+
+// This is not possible and `vite-plugin-ssr` will complain
+export default async () => {
+  return {
+    pageContext: {
+      // Some additional `pageContext`
+    }
+  }
+}
+```
+
+Often, the motivation for using async route functions is to determine whether the URL exists:
+
+```js
+// user.page.route.js
+
+export const iKnowThePerformanceRisksOfAsyncRouteFunctions = true
+
+export default async pageContext => {
+  const { url } = pageContext
+
+  // Parse the URL
+  const urlParts = url.slice(1).split('/')
+
+  // Only URLs that start with `/user/:userId`
+  if (urlParts[0] !== 'user') return false
+  const userId = urlParts[1]
+  if (!userId) return false
+
+  // Only if there is a user matching `userId`
+  const user = await db.fetchUser(userId)
+  if (!user) {
+    return false
+  }
+
+  return {
+    routeParams: {
+      userId
+    },
+    // `vite-plugin-ssr` complains
+    pageContext: {
+      user
+    }
+  }
+}
+```
+
+Instead, we can `throw RenderErrorPage()` in our `onBeforeRender()` hook:
+
+```js
+// user.page.server.js
+
+export { onBeforeRender }
+
+import { RenderErrorPage } from 'vite-plugin-ssr'
+
+function onBeforeRender(pageContext) {
+  const { userId } = pageContext.routeParams
+
+  const user = await db.fetchUser(userId)
+
+  if (!user) {
+    // `vite-plugin-ssr` will render `_error.page.js`
+    throw RenderErrorPage({
+      pageContext: {
+        // We can provide some additional `pageContext` to use in `_error.page.js`
+        errorInfo: `User ${userId} doesn't exist`
+      }
+    })
+  }
+
+  // ...
+}
+```
+```js
+// user.page.route.js
+
+export default pageContext => {
+  const { url } = pageContext
+
+  const urlParts = url.slice(1).split('/')
+
+  if (urlParts[0] !== 'user') return false
+  const userId = urlParts[1]
+  if (!userId) return false
+
+  return {
+    routeParams: {
+      userId
+    }
+  }
+}
+```
+
+
+## Precedence
+
+If the route of two pages both match the same URL then we have a route conflict: `vite-plugin-ssr` has to decide which of the two pages should be rendered for that URL.
+
+Upon route conflicts, `vite-plugin-ssr` chooses the first route in following order:
+ 1. Route Function, returned high positive `precedence` number (e.g. `99`)
+ 2. Route Function, returned low positive `precedence` number (e.g. `1`)
+ 3. Filesystem Routing
+ 4. Route String, static (i.e. without `:param` segment, e.g. `/about/company`)
+ 5. Route Function, returned no `precedence` number (or `0`)
+ 6. Route String, parameterized (i.e. with `:param` segement, e.g. `/product/:productId` or `/product/*`)
+ 7. Route Function, returned low negative `precedence` number (e.g. `-1`)
+ 8. Route Function, returned high negative `precedence` number (e.g. `-99`)
+
+**Example (4) + (6) + (7)**:
+
+```js
+// product/item.page.route.js
+export default '/product/:productId'
+```
+```js
+// product/list.page.route.js
+export default '/product'
+```
+
+```js
+// product/catch-all.page.route.js
+export default pageContext => {
+  if (!pageContext.url.startsWith('/product/')) return false
+  return {
+    precedence: -1,
+    pageContext: {
+      // E.g. redirect `/product/wrong/url` to `/product`
+      redirectTo: '/product'
+    }
+  }
+}
+```
+
+```
+URL                           MATCHES                                    WINNER
+==================            ===================================        ======
+/product/42                   product/item.page.route.js      (6)        ⬅️
+                              product/catch-all.page.route.js (7)
+```
+```
+URL                           MATCHES                                    WINNER
+==================            ===================================        ======
+/product                      product/list.page.route.js      (4)        ⬅️
+                              product/catch-all.page.route.js (7)
+```
+```
+URL                           MATCHES                                    WINNER
+==================            ===================================        ======
+/product/wrong/url            product/catch-all.page.route.js (7)        ⬅️
+```
+
+4: Route String, static (without `:param` segment, e.g. `/about/company`)  
+6: Route String, parameterized (with `:param` segements, e.g. `/product/:productId` or `/product/*`)  
+7: Route Function, returned low negative `precedence` number (e.g. `-1`)  
+
+**Example (1) + (4)**:
+
+```js
+// admin.page.route.js
+export default '/admin'
+```
+```js
+// login.page.route.js
+
+export default pageContext => {
+  if( pageContext.user === null ) {
+    return {
+      precedence: 99
+    }
+  }
+  return false
+}
+```
+
+```
+URL                   pageContext.user       MATCHES                       WINNER
+======                ================       =======================       ======
+/admin                null                   login.page.route.js (1)       ⬅️
+                                             admin.page.route.js (4)
+```
+```
+URL                   pageContext.user       MATCHES                       WINNER
+======                ================       =======================       ======
+/admin                'brillout'             admin.page.route.js (4)       ⬅️
+```
+
+1: Route Function, returned high positive `precedence` number  
+4: Route String, static (without `:param` segment, e.g. `/about/company`)  
+

@@ -1,0 +1,64 @@
+By default `pageContext` is available only on the server-side, but we can use `passToClient` to make some `pageContext` available in the browser.
+
+```js
+// *.page.server.js
+// Environment: Node.js
+
+export { passToClient }
+
+// Example of `pageContext` often passed to the browser
+const passToClient = [
+  'pageProps',
+  'routeParams',
+  // (Deep selection is not implemented yet; open a GitHub ticket if you want this.)
+  'user.id',
+  'user.name'
+]
+```
+
+```js
+// *.page.client.js
+// Environment: Browser
+
+import { getPage } from 'vite-plugin-ssr/client'
+
+hydrate()
+
+async function hydrate() {
+  const pageContext = await getPage()
+
+  // Thanks to `passToClient`, these `pageContext` are available here in the browser
+  pageContext.pageProps
+  pageContext.routeParams
+  pageContext.user.id
+  pageContext.user.name
+
+  /* ... */
+}
+```
+
+Or when using Client Routing:
+
+```js
+// *.page.client.js
+// Environment: Browser
+
+import { useClientRouter } from 'vite-plugin-ssr/client/router'
+
+useClientRouter({
+  render(pageContext) {
+    // Thanks to `passToClient`, these `pageContext` are available here in the browser
+    pageContext.pageProps
+    pageContext.routeParams
+    pageContext.user.id
+    pageContext.user.name
+
+    /* ... */
+  }
+})
+```
+
+`passToClient` is usually used together with the `onBeforeRender()` hook to fetch data:
+data is fetched in `async onBeforeRender()` and then made available to the browser with `passToClient`, see [Data Fetching](/data-fetching).
+
+Serialization is done with [`json-s`](https://github.com/brillout/json-s).
