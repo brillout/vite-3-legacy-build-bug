@@ -13,7 +13,7 @@ specifiers:
   react: ^18.2.0
   react-dom: ^18.2.0
   typescript: ^4.3.2
-  vikepress: ^0.0.21
+  vikepress: ^0.0.22
   vite: 3.0.0-beta.5
 
 dependencies:
@@ -24,7 +24,7 @@ dependencies:
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   typescript: 4.7.4
-  vikepress: 0.0.21_biqbaboplfbrettd7655fr4n2y
+  vikepress: 0.0.22_biqbaboplfbrettd7655fr4n2y
   vite: 3.0.0-beta.5
 
 packages:
@@ -2561,8 +2561,8 @@ packages:
       vfile-message: 3.1.2
     dev: false
 
-  /vikepress/0.0.21_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-zO+XNnwMangK4ftHLfyAsz9njOUOplEXGi4UKesJvYdhVfi/94ULqB7LdfEZhG3nyvRwg4o4xD76T+a/SHRr/w==}
+  /vikepress/0.0.22_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-fYNx+Zv6C2jAeCdv6Z3KX/kxylvrd30Joz7Txm0QMsQ4jve/JA7y883sXE2bHtUzZQtjNibn7OsI1ZvuDzreAw==}
     hasBin: true
     peerDependencies:
       react: '18'
