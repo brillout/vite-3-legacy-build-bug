@@ -1,8 +1,8 @@
 Bug reproduction.
 
 ```bash
-git clone git@github.com:brillout/vite-3-babel-bug
-cd vite-3-babel-bug/
+git clone git@github.com:brillout/vite-3-cjs-bug
+cd vite-3-cjs-bug/
 pnpm install
 pnpm run build
 ```
@@ -10,27 +10,24 @@ pnpm run build
 Same as single line (copy-paste me):
 
 ```shell
-git clone git@github.com:brillout/vite-3-babel-bug && cd vite-3-babel-bug/ && pnpm install && pnpm run build
+git clone git@github.com:brillout/vite-3-cjs-bug && cd vite-3-cjs-bug/ && pnpm install && pnpm run build
 ```
 
 Throws:
 
 ```
-vite v3.0.0-beta.5 building for production...
-✓ 116 modules transformed.
-[vite:react-babel] /home/romuuu/tmp/vite-3-bug-dependency-transpiling/node_modules/.pnpm/vikepress@0.0.21_biqbaboplfbrettd7655fr4n2y/node_modules/vikepress/src/utils/Emoji/Emoji.ts: Support for the experimental syntax 'flow' isn't currently enabled (7:8):
+vite v3.0.0-beta.5 building SSR bundle for production...
+✓ 56 modules transformed.
+'escapeInject' is not exported by node_modules/.pnpm/vite-plugin-ssr@0.4.0-beta.43_vite@3.0.0-beta.5/node_modules/vite-plugin-ssr/dist/cjs/node/index.js, imported by node_modules/.pnpm/vikepress@0.0.21_biqbaboplfbrettd7655fr4n2y/node_modules/vikepress/src/algolia/DocSearch.ts
+file: /home/romuuu/tmp/vite-3-babel-bug/node_modules/.pnpm/vikepress@0.0.21_biqbaboplfbrettd7655fr4n2y/node_modules/vikepress/src/algolia/DocSearch.ts:1:0
+1: import { escapeInject } from 'vite-plugin-ssr'
+   ^
+2: import { PageContextResolved } from '../config/resolvePageContext'
+file:///home/romuuu/tmp/vite-3-babel-bug/node_modules/.pnpm/rollup@2.75.7/node_modules/rollup/dist/es/shared/rollup.js:1858
+        base = Object.assign(new Error(base.message), base);
+                             ^
 
-   5 |
-   6 | export { Emoji }
->  7 | export type { EmojiName }
-     |        ^
-   8 |
-   9 | type EmojiName =
-  10 |   | 'warning'
-
-Add @babel/preset-flow (https://github.com/babel/babel/tree/main/packages/babel-preset-flow) to the 'presets' section of your Babel config to enable transformation.
-If you want to leave it as-is, add @babel/plugin-syntax-flow (https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-flow) to the 'plugins' section to enable parsing.
-file: /home/romuuu/tmp/vite-3-bug-dependency-transpiling/node_modules/.pnpm/vikepress@0.0.21_biqbaboplfbrettd7655fr4n2y/node_modules/vikepress/src/utils/Emoji/Emoji.ts:7:7
+Error: 'escapeInject' is not exported by node_modules/.pnpm/vite-plugin-ssr@0.4.0-beta.43_vite@3.0.0-beta.5/node_modules/vite-plugin-ssr/dist/cjs/node/index.js, imported by node_modules/.pnpm/vikepress@0.0.21_biqbaboplfbrettd7655fr4n2y/node_modules/vikepress/src/algolia/DocSearch.ts
 ```
 
-This only happens with Vite 3. See the [branch `vite-2`](https://github.com/brillout/vite-3-babel-bug/tree/vite-2) which is the same but uses Vite 2 and works.
+The Vite config can be edited at `node_modules/.pnpm/vikepress@0.0.22_biqbaboplfbrettd7655fr4n2y/node_modules/vikepress/vite.config.ts`.
