@@ -12,15 +12,15 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^4.3.2",
-    "vikepress": "^0.0.22",
+    "vikepress": "^0.0.23",
     "vite": "^2.8.4"
   },
   "type": "module",
   "pnpm": {
     "overrides": {
-      "@vitejs/plugin-react": "2.0.0-beta.0",
-      "vite": "3.0.0-beta.5",
-      "vite-plugin-ssr": "0.4.0-beta.43"
+      "@vitejs/plugin-react": "2.0.0-beta.1",
+      "vite": "3.0.0-beta.7",
+      "vite-plugin-ssr": "0.4.0-beta.45"
     }
   }
 }

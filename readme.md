@@ -30,4 +30,4 @@ file:///home/romuuu/tmp/vite-3-babel-bug/node_modules/.pnpm/rollup@2.75.7/node_m
 Error: 'escapeInject' is not exported by node_modules/.pnpm/vite-plugin-ssr@0.4.0-beta.43_vite@3.0.0-beta.5/node_modules/vite-plugin-ssr/dist/cjs/node/index.js, imported by node_modules/.pnpm/vikepress@0.0.21_biqbaboplfbrettd7655fr4n2y/node_modules/vikepress/src/algolia/DocSearch.ts
 ```
 
-The Vite config can be edited at `node_modules/.pnpm/vikepress@0.0.22_biqbaboplfbrettd7655fr4n2y/node_modules/vikepress/vite.config.ts`.
+The Vite config can be edited at `node_modules/vikepress/vite.config.ts`.
