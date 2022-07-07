@@ -20,7 +20,7 @@
     "overrides": {
       "@vitejs/plugin-react": "2.0.0-beta.1",
       "vite": "3.0.0-beta.7",
-      "vite-plugin-ssr": "0.4.0-beta.45"
+      "vite-plugin-ssr": "0.4.0-beta.45-legacy-build"
     }
   }
 }
